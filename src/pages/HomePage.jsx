@@ -1,12 +1,44 @@
 import React from 'react'
 import {Search} from 'lucide-react'
 import RecipeCard from '../components/RecipeCard'
-  
+import { useEffect, useState } from 'react'
+import { getRandomColor } from '../lib/util'
+
+const API_ID = import.meta.env.VITE_API_ID
+const API_KEY = import.meta.env.VITE_API_KEY
+
 export const HomePage = () => {
+  const [recipes, setRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchRecipes = async (searchQuery)=> {
+    setLoading(true);
+    setRecipes([]);
+    try{
+      const res = await fetch(`https://api.edamam.com/api/recipes/v2/?app_id=${API_ID}&app_key=${API_KEY}&q=${searchQuery}&type=public`
+)
+      const data = await res.json();
+      setRecipes(data.hits);
+      console.log(data.hits)
+    }catch(err){
+      console.log(err.message)
+    }finally{
+      setLoading(false)
+    }
+  }
+
+  useEffect(()=>{
+    fetchRecipes("chicken")
+  },[])
+
+  const handleSearchRecipe = (e) => {
+    e.preventDefault();
+    fetchRecipes(e.target[0].value);
+  }
   return (
     <div className='bg-[#faf9fb] p-10 flex-1'>
       <div className='max-w-screen-lg mx-auto'>
-        <form>
+        <form onSubmit={handleSearchRecipe}>
           <label className='input shadow-md flex items-center gap-2'>
             <Search size={'24'}/>
             <input type="text" className='text-sm md:text-md grow' 
@@ -23,15 +55,19 @@ export const HomePage = () => {
       <div className='grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3'>
       {/* <RecipeCard /> */}
         {/* 1recipe */}
-        <RecipeCard/>
-        <RecipeCard/>
-        <RecipeCard/>
-        <RecipeCard/>
-        <RecipeCard/>
-        <RecipeCard/>
-        <RecipeCard/>
-        <RecipeCard/>
-    
+        {        console.log(recipes)
+        }
+      {!loading && recipes.map(({recipe},index) => {
+       return( <RecipeCard key={index} recipe={recipe} {...getRandomColor()}/>)
+      })}
+        {loading &&[...Array(9)].map((_,index)=>
+       <div key={index} className="flex flex-col gap-4 w-full">
+       <div className="skeleton h-32 w-full"></div>
+       <div className="skeleton h-4 w-28"></div>
+       <div className="skeleton h-4 w-full"></div>
+       <div className="skeleton h-4 w-full"></div>
+     </div> 
+      ) }  
 
       </div>
       </div>
